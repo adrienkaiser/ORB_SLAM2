@@ -41,7 +41,7 @@ MapDrawer::MapDrawer(Map* pMap, const string &strSettingPath):mpMap(pMap)
 
 }
 
-void MapDrawer::DrawMapPoints()
+void MapDrawer::DrawMapPoints(const bool bUsePointColor)
 {
     const vector<MapPoint*> &vpMPs = mpMap->GetAllMapPoints();
     const vector<MapPoint*> &vpRefMPs = mpMap->GetReferenceMapPoints();
@@ -59,6 +59,11 @@ void MapDrawer::DrawMapPoints()
     {
         if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))
             continue;
+        if(bUsePointColor)
+        {
+            cv::Mat col = vpMPs[i]->GetColor();
+            glColor3f(col.at<float>(0),col.at<float>(1),col.at<float>(2));
+        }
         cv::Mat pos = vpMPs[i]->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
     }
@@ -72,6 +77,11 @@ void MapDrawer::DrawMapPoints()
     {
         if((*sit)->isBad())
             continue;
+        if(bUsePointColor)
+        {
+            cv::Mat col = (*sit)->GetColor();
+            glColor3f(col.at<float>(0),col.at<float>(1),col.at<float>(2));
+        }
         cv::Mat pos = (*sit)->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
 

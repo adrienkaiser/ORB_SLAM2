@@ -348,6 +348,8 @@ void LocalMapping::CreateNewMapPoints()
             else
                 continue; //No stereo and very low parallax
 
+            cv::Mat xCol = mpCurrentKeyFrame->mvKeysColor[idx1];
+
             cv::Mat x3Dt = x3D.t();
 
             //Check triangulation in front of cameras
@@ -431,7 +433,7 @@ void LocalMapping::CreateNewMapPoints()
                 continue;
 
             // Triangulation is succesfull
-            MapPoint* pMP = new MapPoint(x3D,mpCurrentKeyFrame,mpMap);
+            MapPoint* pMP = new MapPoint(x3D,xCol,mpCurrentKeyFrame,mpMap);
 
             pMP->AddObservation(mpCurrentKeyFrame,idx1);            
             pMP->AddObservation(pKF2,idx2);
