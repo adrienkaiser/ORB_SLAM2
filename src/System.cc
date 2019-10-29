@@ -476,6 +476,44 @@ void System::SaveTrajectoryKITTI(const string &filename)
     cout << endl << "trajectory saved!" << endl;
 }
 
+void System::SaveMapPointCloud(const string &filename)
+{
+    cout << endl << "Saving map point cloud to " << filename << " ..." << endl;
+
+    vector<MapPoint*> vpMPs = mpMap->GetAllMapPoints();
+
+    ofstream f;
+    f.open(filename.c_str());
+    f << "ply\n";
+    f << "format ascii 1.0\n";
+    f << "element vertex " << vpMPs.size() << "\n";
+    f << "property float x\n";
+    f << "property float y\n";
+    f << "property float z\n";
+    f << "property float nx\n";
+    f << "property float ny\n";
+    f << "property float nz\n";
+    f << "property uchar red\n";
+    f << "property uchar green\n";
+    f << "property uchar blue\n";
+    f << "end_header\n";
+
+    for(size_t i=0; i<vpMPs.size(); i++)
+    {
+        cv::Mat pos = vpMPs[i]->GetWorldPos();
+        cv::Mat nor = vpMPs[i]->GetSurfNormal();
+        cv::Mat col = vpMPs[i]->GetColor();
+
+        f << pos.at<float>(0) << " " << pos.at<float>(1) << " " << pos.at<float>(2);
+        f << " " << nor.at<float>(0) << " " << nor.at<float>(1) << " " << nor.at<float>(2);
+        f << " " << col.at<float>(0)*255.0f << " " << col.at<float>(1)*255.0f << " " << col.at<float>(2)*255.0f;
+        f << "\n";
+    }
+
+    f.close();
+    cout << endl << "point cloud saved!" << endl;
+}
+
 int System::GetTrackingState()
 {
     unique_lock<mutex> lock(mMutexState);
