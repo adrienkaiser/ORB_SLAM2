@@ -86,6 +86,9 @@ public:
     // since last call to this function
     bool MapChanged();
 
+    // Returns true if the last frame was added as a keyframe
+    bool AddedKeyframe() const;
+
     // Reset the system (clear map)
     void Reset();
 

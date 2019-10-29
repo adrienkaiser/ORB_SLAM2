@@ -292,6 +292,11 @@ bool System::MapChanged()
         return false;
 }
 
+bool System::AddedKeyframe() const
+{
+    return (mpTracker->mCurrentFrame.mTimeStamp == mpTracker->mCurrentFrame.mpReferenceKF->mTimeStamp); // last frame is its own keyframe
+}
+
 void System::Reset()
 {
     unique_lock<mutex> lock(mMutexReset);
