@@ -29,7 +29,7 @@ namespace ORB_SLAM2
 long unsigned int MapPoint::nNextId=0;
 mutex MapPoint::mGlobalMutex;
 
-MapPoint::MapPoint(const cv::Mat &Pos, cv::Mat &Col, KeyFrame *pRefKF, Map* pMap):
+MapPoint::MapPoint(const cv::Mat &Pos, const cv::Mat &SurfNorm, cv::Mat &Col, KeyFrame *pRefKF, Map* pMap):
     mnFirstKFid(pRefKF->mnId), mnFirstFrame(pRefKF->mnFrameId), nObs(0), mnTrackReferenceForFrame(0),
     mnLastFrameSeen(0), mnBALocalForKF(0), mnFuseCandidateForKF(0), mnLoopPointForKF(0), mnCorrectedByKF(0),
     mnCorrectedReference(0), mnBAGlobalForKF(0), mpRefKF(pRefKF), mnVisible(1), mnFound(1), mbBad(false),
@@ -38,13 +38,14 @@ MapPoint::MapPoint(const cv::Mat &Pos, cv::Mat &Col, KeyFrame *pRefKF, Map* pMap
     Pos.copyTo(mWorldPos);
     Col.copyTo(mColor);
     mNormalVector = cv::Mat::zeros(3,1,CV_32F);
+    SurfNorm.copyTo(mSurfaceNormal);
 
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     unique_lock<mutex> lock(mpMap->mMutexPointCreation);
     mnId=nNextId++;
 }
 
-MapPoint::MapPoint(const cv::Mat &Pos, cv::Mat &Col, Map* pMap, Frame* pFrame, const int &idxF):
+MapPoint::MapPoint(const cv::Mat &Pos, const cv::Mat &SurfNorm, cv::Mat &Col, Map* pMap, Frame* pFrame, const int &idxF):
     mnFirstKFid(-1), mnFirstFrame(pFrame->mnId), nObs(0), mnTrackReferenceForFrame(0), mnLastFrameSeen(0),
     mnBALocalForKF(0), mnFuseCandidateForKF(0),mnLoopPointForKF(0), mnCorrectedByKF(0),
     mnCorrectedReference(0), mnBAGlobalForKF(0), mpRefKF(static_cast<KeyFrame*>(NULL)), mnVisible(1),
@@ -55,6 +56,7 @@ MapPoint::MapPoint(const cv::Mat &Pos, cv::Mat &Col, Map* pMap, Frame* pFrame, c
     cv::Mat Ow = pFrame->GetCameraCenter();
     mNormalVector = mWorldPos - Ow;
     mNormalVector = mNormalVector/cv::norm(mNormalVector);
+    SurfNorm.copyTo(mSurfaceNormal);
 
     cv::Mat PC = Pos - Ow;
     const float dist = cv::norm(PC);
@@ -102,6 +104,12 @@ cv::Mat MapPoint::GetNormal()
 {
     unique_lock<mutex> lock(mMutexPos);
     return mNormalVector.clone();
+}
+
+cv::Mat MapPoint::GetSurfNormal()
+{
+    unique_lock<mutex> lock(mMutexPos);
+    return mSurfaceNormal.clone();
 }
 
 KeyFrame* MapPoint::GetReferenceKeyFrame()

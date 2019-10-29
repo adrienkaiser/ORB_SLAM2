@@ -41,7 +41,7 @@ MapDrawer::MapDrawer(Map* pMap, const string &strSettingPath):mpMap(pMap)
 
 }
 
-void MapDrawer::DrawMapPoints(const bool bUsePointColor)
+void MapDrawer::DrawMapPoints(const bool bUsePointColor, const bool bUsePointColorNormal)
 {
     const vector<MapPoint*> &vpMPs = mpMap->GetAllMapPoints();
     const vector<MapPoint*> &vpRefMPs = mpMap->GetReferenceMapPoints();
@@ -64,6 +64,11 @@ void MapDrawer::DrawMapPoints(const bool bUsePointColor)
             cv::Mat col = vpMPs[i]->GetColor();
             glColor3f(col.at<float>(0),col.at<float>(1),col.at<float>(2));
         }
+        else if(bUsePointColorNormal)
+        {
+            cv::Mat nor = vpMPs[i]->GetSurfNormal();
+            glColor3f(std::abs(nor.at<float>(0)),std::abs(nor.at<float>(1)),std::abs(nor.at<float>(2)));
+        }
         cv::Mat pos = vpMPs[i]->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
     }
@@ -81,6 +86,11 @@ void MapDrawer::DrawMapPoints(const bool bUsePointColor)
         {
             cv::Mat col = (*sit)->GetColor();
             glColor3f(col.at<float>(0),col.at<float>(1),col.at<float>(2));
+        }
+        else if(bUsePointColorNormal)
+        {
+            cv::Mat nor = (*sit)->GetSurfNormal();
+            glColor3f(std::abs(nor.at<float>(0)),std::abs(nor.at<float>(1)),std::abs(nor.at<float>(2)));
         }
         cv::Mat pos = (*sit)->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));

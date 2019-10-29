@@ -165,6 +165,7 @@ public:
     const std::vector<cv::Mat> mvKeysColor;
     const std::vector<float> mvuRight; // negative value for monocular points
     const std::vector<float> mvDepth; // negative value for monocular points
+    const std::vector<cv::Mat> mvSurfNormal; // zero value for monocular points
     const cv::Mat mDescriptors;
 
     //BoW

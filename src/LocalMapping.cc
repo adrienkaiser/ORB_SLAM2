@@ -348,6 +348,7 @@ void LocalMapping::CreateNewMapPoints()
             else
                 continue; //No stereo and very low parallax
 
+            cv::Mat xNorm = mpCurrentKeyFrame->GetPoseInverse().rowRange(0,3).colRange(0,3) * mpCurrentKeyFrame->mvSurfNormal[idx1]; // convert to world frame
             cv::Mat xCol = mpCurrentKeyFrame->mvKeysColor[idx1];
 
             cv::Mat x3Dt = x3D.t();
@@ -433,7 +434,7 @@ void LocalMapping::CreateNewMapPoints()
                 continue;
 
             // Triangulation is succesfull
-            MapPoint* pMP = new MapPoint(x3D,xCol,mpCurrentKeyFrame,mpMap);
+            MapPoint* pMP = new MapPoint(x3D,xNorm,xCol,mpCurrentKeyFrame,mpMap);
 
             pMP->AddObservation(mpCurrentKeyFrame,idx1);            
             pMP->AddObservation(pKF2,idx2);

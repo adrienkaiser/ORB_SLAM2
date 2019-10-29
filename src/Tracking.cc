@@ -529,8 +529,9 @@ void Tracking::StereoInitialization()
             if(z>0)
             {
                 cv::Mat x3D = mCurrentFrame.UnprojectStereo(i);
+                cv::Mat xNorm = mCurrentFrame.GetRotationInverse() * mCurrentFrame.mvSurfNormal[i]; // convert to world frame
                 cv::Mat xCol = mCurrentFrame.mvKeysColor[i];
-                MapPoint* pNewMP = new MapPoint(x3D,xCol,pKFini,mpMap);
+                MapPoint* pNewMP = new MapPoint(x3D,xNorm,xCol,pKFini,mpMap);
                 pNewMP->AddObservation(pKFini,i);
                 pKFini->AddMapPoint(pNewMP,i);
                 pNewMP->ComputeDistinctiveDescriptors();
@@ -660,9 +661,10 @@ void Tracking::CreateInitialMapMonocular()
 
         //Create MapPoint.
         cv::Mat worldPos(mvIniP3D[i]);
+        cv::Mat xNorm = mInitialFrame.GetRotationInverse() * mInitialFrame.mvSurfNormal[i]; // convert to world frame
         cv::Mat xCol = mInitialFrame.mvKeysColor[i];
 
-        MapPoint* pMP = new MapPoint(worldPos,xCol,pKFcur,mpMap);
+        MapPoint* pMP = new MapPoint(worldPos,xNorm,xCol,pKFcur,mpMap);
 
         pKFini->AddMapPoint(pMP,i);
         pKFcur->AddMapPoint(pMP,mvIniMatches[i]);
@@ -852,8 +854,9 @@ void Tracking::UpdateLastFrame()
         if(bCreateNew)
         {
             cv::Mat x3D = mLastFrame.UnprojectStereo(i);
+            cv::Mat xNorm = mLastFrame.GetRotationInverse() * mLastFrame.mvSurfNormal[i]; // convert to world frame
             cv::Mat xCol = mLastFrame.mvKeysColor[i];
-            MapPoint* pNewMP = new MapPoint(x3D,xCol,mpMap,&mLastFrame,i);
+            MapPoint* pNewMP = new MapPoint(x3D,xNorm,xCol,mpMap,&mLastFrame,i);
 
             mLastFrame.mvpMapPoints[i]=pNewMP;
 
@@ -1117,8 +1120,9 @@ void Tracking::CreateNewKeyFrame()
                 if(bCreateNew)
                 {
                     cv::Mat x3D = mCurrentFrame.UnprojectStereo(i);
+                    cv::Mat xNorm = mCurrentFrame.GetRotationInverse() * mCurrentFrame.mvSurfNormal[i]; // convert to world frame
                     cv::Mat xCol = mCurrentFrame.mvKeysColor[i];
-                    MapPoint* pNewMP = new MapPoint(x3D,xCol,pKF,mpMap);
+                    MapPoint* pNewMP = new MapPoint(x3D,xNorm,xCol,pKF,mpMap);
                     pNewMP->AddObservation(pKF,i);
                     pKF->AddMapPoint(pNewMP,i);
                     pNewMP->ComputeDistinctiveDescriptors();

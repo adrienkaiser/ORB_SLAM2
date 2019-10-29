@@ -41,7 +41,7 @@ Frame::Frame(const Frame &frame)
      mTimeStamp(frame.mTimeStamp), mK(frame.mK.clone()), mDistCoef(frame.mDistCoef.clone()),
      mbf(frame.mbf), mb(frame.mb), mThDepth(frame.mThDepth), N(frame.N), mvKeys(frame.mvKeys),
      mvKeysRight(frame.mvKeysRight), mvKeysUn(frame.mvKeysUn), mvKeysColor(frame.mvKeysColor),  mvuRight(frame.mvuRight),
-     mvDepth(frame.mvDepth), mBowVec(frame.mBowVec), mFeatVec(frame.mFeatVec),
+     mvDepth(frame.mvDepth), mvSurfNormal(frame.mvSurfNormal), mBowVec(frame.mBowVec), mFeatVec(frame.mFeatVec),
      mDescriptors(frame.mDescriptors.clone()), mDescriptorsRight(frame.mDescriptorsRight.clone()),
      mvpMapPoints(frame.mvpMapPoints), mvbOutlier(frame.mvbOutlier), mnId(frame.mnId),
      mpReferenceKF(frame.mpReferenceKF), mnScaleLevels(frame.mnScaleLevels),
@@ -200,6 +200,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imRGB, const double &timeStam
     // Set no stereo information
     mvuRight = vector<float>(N,-1);
     mvDepth = vector<float>(N,-1);
+    mvSurfNormal = vector<cv::Mat>(N,cv::Mat::zeros(3,1,CV_32F));
 
     mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
     mvbOutlier = vector<bool>(N,false);
@@ -477,6 +478,7 @@ void Frame::ComputeStereoMatches()
 {
     mvuRight = vector<float>(N,-1.0f);
     mvDepth = vector<float>(N,-1.0f);
+    mvSurfNormal = vector<cv::Mat>(N,cv::Mat::zeros(3,1,CV_32F));
 
     const int thOrbDist = (ORBmatcher::TH_HIGH+ORBmatcher::TH_LOW)/2;
 
@@ -629,6 +631,7 @@ void Frame::ComputeStereoMatches()
                 mvDepth[iL]=mbf/disparity;
                 mvuRight[iL] = bestuR;
                 vDistIdx.push_back(pair<int,int>(bestDist,iL));
+                // TODO: estimate surface normal using depth image gradient and set mvSurfNormal[iL]
             }
         }
     }
@@ -654,6 +657,8 @@ void Frame::ComputeStereoFromRGBD(const cv::Mat &imDepth)
 {
     mvuRight = vector<float>(N,-1);
     mvDepth = vector<float>(N,-1);
+    mvSurfNormal = vector<cv::Mat>(N,cv::Mat::zeros(3,1,CV_32F));
+    const float n = 1;
 
     for(int i=0; i<N; i++)
     {
@@ -669,6 +674,35 @@ void Frame::ComputeStereoFromRGBD(const cv::Mat &imDepth)
         {
             mvDepth[i] = d;
             mvuRight[i] = kpU.pt.x-mbf/d;
+
+            // estimate surface normal using depth image gradient
+            if(u>=n && u<imDepth.cols-n && v>=n && v<imDepth.rows-n) // if not on image border
+            {
+                const float dR = imDepth.at<float>(v,u+n);
+                const float dL = imDepth.at<float>(v,u-n);
+                const float dU = imDepth.at<float>(v+n,u);
+                const float dD = imDepth.at<float>(v-n,u);
+
+                if(dR>0 && dL>0 && dU>0 && dD>0) // if neighbor pixels have depth
+                {
+                    // TODO: check that depth are not too far
+                    const float xR = (u+n-cx)*dR*invfx;
+                    const float xL = (u-n-cx)*dL*invfx;
+                    const float yU = (v+n-cy)*dU*invfy;
+                    const float yD = (v-n-cy)*dD*invfy;
+
+                    const float dx = xR-xL;
+                    const float dy = yU-yD;
+                    const float dzdx = dR-dL;
+                    const float dzdy = dU-dD;
+
+                    mvSurfNormal[i] = (cv::Mat_<float>(3,1) << -dzdx*dy, -dzdy*dx, dx*dy); // https://stackoverflow.com/a/34644939 // cross http://wiki.bethanycrane.com/vector-maths
+                    cv::normalize(mvSurfNormal[i],mvSurfNormal[i]);
+                    cv::Mat point = (cv::Mat_<float>(3,1) << (u-cx)*d*invfx, (v-cy)*d*invfy, d);
+                    if(mvSurfNormal[i].dot(point) > 0.0f) // consistent orientation towards camera
+                        mvSurfNormal[i] *= -1.0f;
+                }
+            }
         }
     }
 }

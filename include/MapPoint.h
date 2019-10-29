@@ -39,8 +39,8 @@ class Frame;
 class MapPoint
 {
 public:
-    MapPoint(const cv::Mat &Pos, cv::Mat &Col, KeyFrame* pRefKF, Map* pMap);
-    MapPoint(const cv::Mat &Pos, cv::Mat &Col,  Map* pMap, Frame* pFrame, const int &idxF);
+    MapPoint(const cv::Mat &Pos, const cv::Mat &SurfNorm, cv::Mat &Col, KeyFrame* pRefKF, Map* pMap);
+    MapPoint(const cv::Mat &Pos, const cv::Mat &SurfNorm, cv::Mat &Col,  Map* pMap, Frame* pFrame, const int &idxF);
 
     void SetWorldPos(const cv::Mat &Pos);
     cv::Mat GetWorldPos();
@@ -49,6 +49,7 @@ public:
     cv::Mat GetColor();
 
     cv::Mat GetNormal();
+    cv::Mat GetSurfNormal();
     KeyFrame* GetReferenceKeyFrame();
 
     std::map<KeyFrame*,size_t> GetObservations();
@@ -128,6 +129,9 @@ protected:
 
      // Mean viewing direction
      cv::Mat mNormalVector;
+
+     // Surface normal
+     cv::Mat mSurfaceNormal;
 
      // Best descriptor to fast matching
      cv::Mat mDescriptor;
