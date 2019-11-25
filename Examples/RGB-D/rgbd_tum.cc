@@ -80,6 +80,7 @@ int main(int argc, char **argv)
         imRGB = cv::imread(string(argv[3])+"/"+vstrImageFilenamesRGB[ni],CV_LOAD_IMAGE_UNCHANGED);
         imD = cv::imread(string(argv[3])+"/"+vstrImageFilenamesD[ni],CV_LOAD_IMAGE_UNCHANGED);
         double tframe = vTimestamps[ni];
+        cvtColor(imRGB, imRGB, CV_BGR2RGB);
 
         if(imRGB.empty())
         {
@@ -145,6 +146,11 @@ void LoadImages(const string &strAssociationFilename, vector<string> &vstrImageF
 {
     ifstream fAssociation;
     fAssociation.open(strAssociationFilename.c_str());
+    if(fAssociation.fail())
+    {
+        cout<< endl << "Could not open file: " << strAssociationFilename <<endl;
+        return;
+    }
     while(!fAssociation.eof())
     {
         string s;
